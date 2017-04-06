@@ -23,5 +23,12 @@ repositories{
 dependencies{
 	// https://mvnrepository.com/artifact/org.quartz-scheduler/quartz
 	compile group: 'org.quartz-scheduler', name: 'quartz', version: '2.2.3'
+// https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
+// https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+// https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
+compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
+
 
 }
