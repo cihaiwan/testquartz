@@ -6,9 +6,9 @@ package com.simple;
 //import static org.quartz.CronScheduleBuilder.*;
 
 
-import static org.quartz.JobBuilder.*;
-import static org.quartz.TriggerBuilder.*;
-import static org.quartz.CronScheduleBuilder.*;
+import static org.quartz.CronScheduleBuilder.cronSchedule;
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.TriggerBuilder.newTrigger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,11 +19,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.quartz.Job;
+import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,25 +49,32 @@ public class CopyFile implements Job{
 		}
 	}
 	
+	public static void execution(){
+		logger.info("开始复制文件");
+		List<File> files=findFile();
+		createDir(files);
+		logger.info("结束复制文件");
+	}
+	
 	public static void main(String[] args) throws SchedulerException, FileNotFoundException, IOException{
 		
-		List<File> files=new ArrayList<File>();
-		createDir(files);
-//		String cron=properties.get("cron").toString();
-//        Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
-//
-//		JobDetail job = newJob(CopyFile.class)
-//			      .withIdentity("job1", "group1")
-//			      .build();
-//			  Trigger trigger = newTrigger().withIdentity("trigger1", "group1")
-//			      .startNow()
-//			            .withSchedule(cronSchedule(cron))            
-//			      .build();
-//
-//			  // Tell quartz to schedule the job using our trigger
-//			  scheduler.scheduleJob(job, trigger);
-//
-//			  scheduler.start();
+		execution();
+		String cron=properties.get("cron").toString();
+		System.out.println(cron);
+        Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
+
+		JobDetail job = newJob(CopyFile.class)
+			      .withIdentity("job1", "group1")
+			      .build();
+			  Trigger trigger = newTrigger().withIdentity("trigger1", "group1")
+			      .startNow()
+			            .withSchedule(cronSchedule(cron))            
+			      .build();
+
+			  // Tell quartz to schedule the job using our trigger
+			  scheduler.scheduleJob(job, trigger);
+
+			  scheduler.start();
 
              // scheduler.shutdown();
 	}
@@ -76,19 +88,45 @@ public class CopyFile implements Job{
 				list.add(file);
 			}
 		}
-		System.out.println(list.size());
 		return list;
 	}
 	public static void createDir(List<File> files){
 		String dir=properties.get("dir").toString();
 		if(dir.lastIndexOf("/")!=0){
-			dir+="/"+DateFormatUtils.format(new Date(),"yyyyMMddHHmmss");
+			dir+="/"+DateFormatUtils.format(new Date(),properties.getProperty("fileformat").toString());
 		}
 		File file=new File(dir);
+		try {
+			FileUtils.deleteDirectory(file);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			logger.error(file.getName()+"文件删除失败",e1);
+		}
 		if(!file.exists()){
 			logger.info(dir);
 			file.mkdirs();
 			for(File f:files){
+				File ff=new File(dir+"/"+f.getName());
+				if(f.isDirectory()){
+					ff.mkdirs();
+					try {
+						FileUtils.copyDirectory(f, ff);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						logger.error("文件复制失败", e);
+					}
+				}else {
+					try {
+						ff.createNewFile();
+						FileUtils.copyFile(f, ff);
+					} catch (Exception e) {
+						e.printStackTrace();
+						logger.error(ff.getName()+"文件未找到，无法创建",e);
+					}
+				}
+				
 				
 			}
 		}
@@ -100,7 +138,6 @@ public class CopyFile implements Job{
 	@Override
 	public void execute(JobExecutionContext context)
 			throws JobExecutionException {
-		// TODO Auto-generated method stub
-		System.out.println("1234");
+		execution();
 	}
 }
