@@ -4,15 +4,28 @@ apply plugin:'eclipse'
 version=1.00
 sourceCompatibility=1.7
 
+configurations{
+	compile{
+		description='compile classpath'
+	}
+}
+
+
 sourceSets{
 	main.java{
+		srcDirs=['src']
+	}
+	main.resources{
 		srcDirs=['src']
 	}
 }
 
 jar{
 	manifest{
-		attributes "Main-Class":"com.simple.CopyFile"
+		attributes 'Main-Class':'com.simple.CopyFile'
+	}
+	into('libs'){
+		from configurations.runtime
 	}
 }
 
@@ -32,5 +45,8 @@ compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
 // https://mvnrepository.com/artifact/commons-io/commons-io
 compile group: 'commons-io', name: 'commons-io', version: '2.5'
 
+}
 
+configurations.each{
+	println it
 }

@@ -37,7 +37,7 @@ public class CopyFile implements Job{
 	
 	public static Properties properties=new Properties();
 	static{
-		String copyFile=System.getenv("COPY_CONFIG");
+		String copyFile=System.getProperty("user.dir")+"\\"+"a.properties";
 		try {
 			properties.load(new FileInputStream(new File(copyFile)));
 		} catch (FileNotFoundException e) {
@@ -50,17 +50,16 @@ public class CopyFile implements Job{
 	}
 	
 	public static void execution(){
-		logger.info("开始复制文件");
+		logger.info("copy start ....");
 		List<File> files=findFile();
 		createDir(files);
-		logger.info("结束复制文件");
+		logger.info("copy over .....");
 	}
 	
 	public static void main(String[] args) throws SchedulerException, FileNotFoundException, IOException{
-		
 		execution();
 		String cron=properties.get("cron").toString();
-		System.out.println(cron);
+		//System.out.println(cron);
         Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
 
 		JobDetail job = newJob(CopyFile.class)
@@ -96,17 +95,18 @@ public class CopyFile implements Job{
 			dir+="/"+DateFormatUtils.format(new Date(),properties.getProperty("fileformat").toString());
 		}
 		File file=new File(dir);
-		try {
-			FileUtils.deleteDirectory(file);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			logger.error(file.getName()+"文件删除失败",e1);
-		}
+//		try {
+//			FileUtils.deleteDirectory(file);
+//		} catch (IOException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//			logger.error(file.getName()+"文件删除失败",e1);
+//		}
 		if(!file.exists()){
-			logger.info(dir);
+			logger.info("copy to:"+dir);
 			file.mkdirs();
 			for(File f:files){
+				logger.info("++++++++++++"+f.getName());
 				File ff=new File(dir+"/"+f.getName());
 				if(f.isDirectory()){
 					ff.mkdirs();
@@ -115,7 +115,7 @@ public class CopyFile implements Job{
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-						logger.error("文件复制失败", e);
+						logger.error("file copy failure", e);
 					}
 				}else {
 					try {
@@ -123,7 +123,7 @@ public class CopyFile implements Job{
 						FileUtils.copyFile(f, ff);
 					} catch (Exception e) {
 						e.printStackTrace();
-						logger.error(ff.getName()+"文件未找到，无法创建",e);
+						logger.error(ff.getName()+"file not find ,build fail",e);
 					}
 				}
 				
